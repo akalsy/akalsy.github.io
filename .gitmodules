@@ -1,0 +1,3 @@
+[submodule "themes/hexo-theme-lx"]
+	path = themes/hexo-theme-lx
+	url = https://github.com/blleng/hexo-theme-lx
