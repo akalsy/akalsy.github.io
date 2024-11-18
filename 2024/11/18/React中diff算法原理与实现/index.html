@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="theme-color" content=#58b77a>
+  <title>React中diff算法原理与实现 | 胜宇的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Liu Shengyu">
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <script id="hexo-configurations">
+  var CONFIG = {
+    root: '/',
+    theme: 'lx',
+    version: '0.4.4',
+    localsearch:{
+      "enable": false,
+      "trigger": "auto",
+      "top_n_per_article": 1,
+      "unescape": false,
+      "preload": false
+      },
+    path: 'null'
+  };
+</script>
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/css/main.min.css">
+  
+  <style type="text/css">
+    pre,
+    code {
+      font-family: 'Fira Code', monospace;
+    }
+    html {
+      font-family: sans-serif;
+    }
+    body {
+      font-family: sans-serif;
+    }
+    h1, h2, h3, h4, h5, figure {
+      font-family: sans-serif;
+    }
+    .menu-container{
+      font-family: sans-serif;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/js/jquery.jside.menu.min.js"></script>
+	<script>
+	$(document).ready(function(){
+	$(".menu-container").jSideMenu({
+	    jSidePosition: "position-right",
+	    jSideSticky: true,
+	    jSideSkin: "",
+	     });
+	}); 
+	</script>
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira Code:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+<body>
+<div class="single">
+
+<div id="page">
+<div class="header">
+  <div id="lx-aside" style="background-image: url(https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/images/post_cover.min.jpeg)" data-stellar-background-ratio="0.5">
+    <div class="overlay">
+      
+      <div class="page-title">
+        <div class="avatar"><a href="/"><img src="https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/images/avatar.min.jpeg" alt="Liu Shengyu"></a></div>
+        <span>2024-11-18</span>
+        <h2>React中diff算法...</h2>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+<div id="lx-main-content">
+  <div class="lx-post">
+    <div class="lx-entry padding">
+      <div>
+        <p>React 中的 <strong>Diff 算法</strong> 是其虚拟 DOM 的核心，用于高效地比较新旧虚拟 DOM 树，并生成最小的更新操作集合以更新实际 DOM。由于 DOM 操作通常是性能瓶颈，React 的 Diff 算法基于一系列假设和优化策略，实现了近似的最优性能。</p>
+<hr>
+<h2 id="1-Diff-算法的基本原则"><a href="#1-Diff-算法的基本原则" class="headerlink" title="1. Diff 算法的基本原则"></a><strong>1. Diff 算法的基本原则</strong></h2><p>React 的 Diff 算法并非传统意义上的 O(n³) 完全对比，而是基于以下三条核心策略进行了优化：</p>
+<ol>
+<li><p><strong>树的分层比较</strong>  </p>
+<ul>
+<li>React 假设两个组件的层级结构相同，子节点的比较只会在同一层进行，不会跨层级比较。</li>
+<li>如果某一层的根节点类型不同，直接删除旧节点并创建新节点，忽略其子树。</li>
+</ul>
+</li>
+<li><p><strong>同级节点的 key 优化</strong>  </p>
+<ul>
+<li>React 使用 <code>key</code> 来识别同级的子节点是否为相同元素。</li>
+<li>若 key 不同，React 会认为它们是不同的节点，并重新创建。</li>
+</ul>
+</li>
+<li><p><strong>组件的类型优先级</strong>  </p>
+<ul>
+<li>对于类组件或函数组件，如果类型相同，则复用组件实例并更新其 props。</li>
+<li>如果类型不同，直接卸载旧组件并重新创建新组件。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="2-Diff-算法的三大过程"><a href="#2-Diff-算法的三大过程" class="headerlink" title="2. Diff 算法的三大过程"></a><strong>2. Diff 算法的三大过程</strong></h2><p>React 的 Diff 算法主要分为以下三个过程：</p>
+<h3 id="2-1-节点树的比较"><a href="#2-1-节点树的比较" class="headerlink" title="2.1 节点树的比较"></a><strong>2.1 节点树的比较</strong></h3><ul>
+<li><p><strong>相同类型节点</strong>：更新属性。</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;div id=<span class="string">&quot;old&quot;</span> /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;new&quot;</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>React 比较 <code>div</code> 的类型相同，只更新属性 <code>id</code>。</li>
+</ul>
+</li>
+<li><p><strong>不同类型节点</strong>：直接替换整个节点。</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;div /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">span</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>React 会移除旧的 <code>div</code> 节点，并新建 <code>span</code> 节点。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="2-2-子节点的比较"><a href="#2-2-子节点的比较" class="headerlink" title="2.2 子节点的比较"></a><strong>2.2 子节点的比较</strong></h3><p>子节点的比较是 React Diff 算法的重点，具体策略如下：</p>
+<h4 id="2-2-1-简单情况"><a href="#2-2-1-简单情况" class="headerlink" title="2.2.1 简单情况"></a><strong>2.2.1 简单情况</strong></h4><p>如果子节点是一个列表且没有 <code>key</code>，React 会按照索引逐个比较。</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<p>当更新为：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Three<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<p>React 会直接复用第一个 <code>li</code>，并更新第二个 <code>li</code>。</p>
+<h4 id="2-2-2-使用-key-优化比较"><a href="#2-2-2-使用-key-优化比较" class="headerlink" title="2.2.2 使用 key 优化比较"></a><strong>2.2.2 使用 <code>key</code> 优化比较</strong></h4><p>如果子节点带有 <code>key</code> 属性，React 会根据 <code>key</code> 进行匹配，而不是简单地按顺序比较。</p>
+<p>示例：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;a&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;b&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<p>更新为：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;b&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;a&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>React 会通过 <code>key</code> 发现节点位置交换。</li>
+<li>而不是删除和重新创建这两个节点。</li>
+</ul>
+<p>这种 <code>key</code> 优化可以显著提高列表动态更新时的性能。</p>
+<hr>
+<h3 id="2-3-组件的比较"><a href="#2-3-组件的比较" class="headerlink" title="2.3 组件的比较"></a><strong>2.3 组件的比较</strong></h3><ul>
+<li><p><strong>相同类型的组件</strong>：保留组件实例，更新 <code>props</code>。</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="title class_">ComponentA</span> prop=<span class="string">&quot;old&quot;</span> /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">ComponentA</span> <span class="attr">prop</span>=<span class="string">&quot;new&quot;</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+<p>React 会调用 <code>ComponentA</code> 的生命周期方法（如 <code>shouldComponentUpdate</code> 或 <code>useEffect</code>），只更新其属性。</p>
+</li>
+<li><p><strong>不同类型的组件</strong>：卸载旧组件，创建新组件。</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="title class_">ComponentA</span> /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">ComponentB</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+<p>React 会销毁 <code>ComponentA</code> 的实例，并重新渲染 <code>ComponentB</code>。</p>
+</li>
+</ul>
+<hr>
+<h2 id="3-Diff-算法的实现细节"><a href="#3-Diff-算法的实现细节" class="headerlink" title="3. Diff 算法的实现细节"></a><strong>3. Diff 算法的实现细节</strong></h2><h3 id="3-1-整体流程"><a href="#3-1-整体流程" class="headerlink" title="3.1 整体流程"></a><strong>3.1 整体流程</strong></h3><p>React 的虚拟 DOM 树由 Fiber 数据结构表示，Diff 过程基于 Fiber 节点进行递归：</p>
+<ol>
+<li><strong>比较节点类型</strong>：<ul>
+<li>类型相同：更新属性。</li>
+<li>类型不同：替换整个节点。</li>
+</ul>
+</li>
+<li><strong>比较子节点</strong>：<ul>
+<li>通过 <code>key</code> 确定是否需要移动或复用节点。</li>
+<li>遍历列表的新增、删除或更新操作。</li>
+</ul>
+</li>
+<li><strong>生成更新队列</strong>：<ul>
+<li>记录需要执行的操作，最终批量更新真实 DOM。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="3-2-key-的作用"><a href="#3-2-key-的作用" class="headerlink" title="3.2 key 的作用"></a><strong>3.2 <code>key</code> 的作用</strong></h3><p>React 通过 <code>key</code> 来跟踪子节点的身份，解决以下问题：</p>
+<ul>
+<li>当节点顺序发生变化时，避免不必要的移除和重新创建。</li>
+<li>提高列表渲染的性能。</li>
+</ul>
+<p><strong>无 <code>key</code> 的情况</strong>：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<p>变更为：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Three<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<p>React 会重新创建所有节点。</p>
+<p><strong>有 <code>key</code> 的情况</strong>：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;1&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;2&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<p>变更为：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;2&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;1&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+<p>React 会通过 <code>key</code> 检测顺序变化，只更新位置。</p>
+<hr>
+<h2 id="4-Diff-算法的复杂度"><a href="#4-Diff-算法的复杂度" class="headerlink" title="4. Diff 算法的复杂度"></a><strong>4. Diff 算法的复杂度</strong></h2><p>React 的 Diff 算法通过以下方式优化复杂度：</p>
+<ul>
+<li><strong>树分层比较</strong>：将复杂度从 O(n³) 降低到 O(n)。</li>
+<li><strong><code>key</code> 优化</strong>：减少列表中的重新渲染。</li>
+</ul>
+<p>具体复杂度分析：</p>
+<ul>
+<li><strong>节点类型比较</strong>：O(1)。</li>
+<li><strong>属性比较</strong>：O(n)，其中 n 是属性数量。</li>
+<li><strong>子节点比较</strong>：<ul>
+<li>无 <code>key</code> 时：O(n)。</li>
+<li>有 <code>key</code> 时：O(n) + O(m)，其中 m 是 <code>key</code> 查找的哈希表操作复杂度。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="5-Diff-的限制与优化建议"><a href="#5-Diff-的限制与优化建议" class="headerlink" title="5. Diff 的限制与优化建议"></a><strong>5. Diff 的限制与优化建议</strong></h2><h3 id="5-1-限制"><a href="#5-1-限制" class="headerlink" title="5.1 限制"></a><strong>5.1 限制</strong></h3><ul>
+<li><strong>跨层级移动</strong>：React 不会优化跨层级的节点移动，因为假设节点层级不会变化。</li>
+<li>**缺乏唯一 <code>key</code>**：若没有提供稳定的 <code>key</code>，性能可能下降，甚至导致渲染错误。</li>
+</ul>
+<h3 id="5-2-优化建议"><a href="#5-2-优化建议" class="headerlink" title="5.2 优化建议"></a><strong>5.2 优化建议</strong></h3><ol>
+<li>**使用稳定的 <code>key</code>**：<ul>
+<li>避免使用索引作为 <code>key</code>。</li>
+<li>提供唯一标识，如数据库的 <code>id</code>。</li>
+</ul>
+</li>
+<li><strong>减少 DOM 层级的无关变化</strong>：<ul>
+<li>避免频繁改变节点的层级结构。</li>
+</ul>
+</li>
+<li><strong>分离独立部分</strong>：<ul>
+<li>将不相关的 UI 拆分成独立组件，减少 Diff 范围。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><p>React 的 Diff 算法基于简化规则和分层比较策略，实现了高效的虚拟 DOM 更新。通过使用 <code>key</code> 优化列表比较和组件类型判断，React 能够在绝大多数场景中保持出色的性能。但在特定场景下，开发者仍需通过优化 <code>key</code> 和组件设计来提高性能。</p>
+
+      </div>
+    </div>
+  </div>
+</div>
+<div class="lx-navigation">
+	<div class="lx-cover next lx-cover-sm" style="background-image: url(https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/images/footer-l.min.jpeg)">
+		<div class="overlay"></div>
+		<a class="copy" href="/2024/11/18/hello-world/">
+			<div class="display-t">
+				<div class="display-tc">
+					<div>
+						<span>Next</span>
+						<h3>Hello W...</h3>
+					</div>
+				</div>
+			</div>
+		</a>
+	</div>
+        <div class="lx-cover prev lx-cover-sm" style="background-image: url(https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/images/footer-r.min.jpeg)">
+		<div class="overlay"></div>
+		<a class="copy" href="#">
+			<div class="display-t">
+				<div class="display-tc">
+					<div>
+						<span>Prev</span>
+						<h3>No older post</h3>
+					</div>
+				</div>
+			</div>
+		</a>
+	</div>
+</div>
+
+</div>
+
+<footer>
+  <div>
+  Copyright &copy; 2024.<a href="/">胜宇的博客</a><br>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme <a href="https://lx.js.org" target="_blank">Lx</a><br>
+  </div>
+</footer>
+
+</div>
+
+<button class="hamburger hamburger--arrow-r" type="button" title="menu">
+    <div class="hamburger-box">
+      <div class="hamburger-inner"></div>
+    </div>
+</button>
+<div class="menu visibility">
+  <div class="menu-head">
+    <span class="layer">
+      <div class="col">
+        <div class="row for-pic">
+          <div class="profile-pic">
+            <a href="/"><img src="https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/images/avatar.min.jpeg" alt="Liu Shengyu"/></a>
+          </div>
+        </div>
+        <div class="row for-name">
+          <p>Liu Shengyu</p>
+          <span class="tagline">Hello, World!</span>
+        </div>
+      </div>
+    </span>
+  </div>
+  <nav class="menu-container">
+  <ul class="menu-items">
+    <li><a href="/"><i class="fa fa-home fa-fw"></i>Home</a></li>
+    <li><a href="/archives/"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+    
+    <li class="has-sub"><span class="dropdown-heading">
+      <i class="fa fa-bookmark fa-fw"></i>Pages</span>
+        <ul>
+          <li><a href="/guestbook/">Guestbook</a></li>
+        <li><a href="/about/">About</a></li>
+        </ul>
+    </li>
+    <li class="has-sub"><span class="dropdown-heading">
+      <i class="fa fa-link fa-fw"></i>Friends</span>
+        <ul>
+          <li> <a href="https://lx.js.org" target="_blank">Theme-Lx</a></li>
+        </ul>
+    </li>
+  </ul>
+  </nav>
+</div>
+
+<div class="gototop js-top">
+  <a href="#" class="js-gotop"><i class="fa fa-arrow-up"></i></a>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/theme-lx@0.4.4/source/dist/js/jquery.easing.min.js"></script>
+<script>
+(function () {
+	"use strict";
+	var goToTop = function() {
+		$(".js-gotop").on("click", function(event){
+			event.preventDefault();
+			$("html, body").animate({
+				scrollTop: $("html").offset().top
+			}, 500, "easeInOutExpo");
+			return false;
+		});
+		$(window).scroll(function(){
+			var $win = $(window);
+			if ($win.scrollTop() > 200) {
+				$(".js-top").addClass("active");
+			} else {
+				$(".js-top").removeClass("active");
+			}
+		});
+	};
+	$(function(){
+		goToTop();
+	});
+}());
+</script>
+
+
+</body>
+</html>
