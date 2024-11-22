@@ -7,19 +7,19 @@
 <hr>
 <h2 id="1-Diff-算法的基本原则"><a href="#1-Diff-算法的基本原则" class="headerlink" title="1. Diff 算法的基本原则"></a><strong>1. Diff 算法的基本原则</strong></h2><p>React 的 Diff 算法并非传统意义上的 O(n³) 完全对比，而是基于以下三条核心策略进行了优化：</p>
 <ol>
-<li><p><strong>树的分层比较</strong>  </p>
+<li><p><strong>树的分层比较</strong></p>
 <ul>
 <li>React 假设两个组件的层级结构相同，子节点的比较只会在同一层进行，不会跨层级比较。</li>
 <li>如果某一层的根节点类型不同，直接删除旧节点并创建新节点，忽略其子树。</li>
 </ul>
 </li>
-<li><p><strong>同级节点的 key 优化</strong>  </p>
+<li><p><strong>同级节点的 key 优化</strong></p>
 <ul>
 <li>React 使用 <code>key</code> 来识别同级的子节点是否为相同元素。</li>
 <li>若 key 不同，React 会认为它们是不同的节点，并重新创建。</li>
 </ul>
 </li>
-<li><p><strong>组件的类型优先级</strong>  </p>
+<li><p><strong>组件的类型优先级</strong></p>
 <ul>
 <li>对于类组件或函数组件，如果类型相同，则复用组件实例并更新其 props。</li>
 <li>如果类型不同，直接卸载旧组件并重新创建新组件。</li>
@@ -31,12 +31,14 @@
 <h3 id="2-1-节点树的比较"><a href="#2-1-节点树的比较" class="headerlink" title="2.1 节点树的比较"></a><strong>2.1 节点树的比较</strong></h3><ul>
 <li><p><strong>相同类型节点</strong>：更新属性。</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;div id=<span class="string">&quot;old&quot;</span> /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;new&quot;</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+
 <ul>
 <li>React 比较 <code>div</code> 的类型相同，只更新属性 <code>id</code>。</li>
 </ul>
 </li>
 <li><p><strong>不同类型节点</strong>：直接替换整个节点。</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;div /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">span</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+
 <ul>
 <li>React 会移除旧的 <code>div</code> 节点，并新建 <code>span</code> 节点。</li>
 </ul>
@@ -46,14 +48,18 @@
 <h3 id="2-2-子节点的比较"><a href="#2-2-子节点的比较" class="headerlink" title="2.2 子节点的比较"></a><strong>2.2 子节点的比较</strong></h3><p>子节点的比较是 React Diff 算法的重点，具体策略如下：</p>
 <h4 id="2-2-1-简单情况"><a href="#2-2-1-简单情况" class="headerlink" title="2.2.1 简单情况"></a><strong>2.2.1 简单情况</strong></h4><p>如果子节点是一个列表且没有 <code>key</code>，React 会按照索引逐个比较。</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <p>当更新为：</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Three<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <p>React 会直接复用第一个 <code>li</code>，并更新第二个 <code>li</code>。</p>
 <h4 id="2-2-2-使用-key-优化比较"><a href="#2-2-2-使用-key-优化比较" class="headerlink" title="2.2.2 使用 key 优化比较"></a><strong>2.2.2 使用 <code>key</code> 优化比较</strong></h4><p>如果子节点带有 <code>key</code> 属性，React 会根据 <code>key</code> 进行匹配，而不是简单地按顺序比较。</p>
 <p>示例：</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;a&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;b&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <p>更新为：</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;b&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;a&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <ul>
 <li>React 会通过 <code>key</code> 发现节点位置交换。</li>
 <li>而不是删除和重新创建这两个节点。</li>
@@ -63,10 +69,12 @@
 <h3 id="2-3-组件的比较"><a href="#2-3-组件的比较" class="headerlink" title="2.3 组件的比较"></a><strong>2.3 组件的比较</strong></h3><ul>
 <li><p><strong>相同类型的组件</strong>：保留组件实例，更新 <code>props</code>。</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;<span class="title class_">ComponentA</span> prop=<span class="string">&quot;old&quot;</span> /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">ComponentA</span> <span class="attr">prop</span>=<span class="string">&quot;new&quot;</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+
 <p>React 会调用 <code>ComponentA</code> 的生命周期方法（如 <code>shouldComponentUpdate</code> 或 <code>useEffect</code>），只更新其属性。</p>
 </li>
 <li><p><strong>不同类型的组件</strong>：卸载旧组件，创建新组件。</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;<span class="title class_">ComponentA</span> /&gt; =&gt; <span class="language-xml"><span class="tag">&lt;<span class="name">ComponentB</span> /&gt;</span></span></span><br></pre></td></tr></table></figure>
+
 <p>React 会销毁 <code>ComponentA</code> 的实例，并重新渲染 <code>ComponentB</code>。</p>
 </li>
 </ul>
@@ -96,13 +104,17 @@
 </ul>
 <p><strong>无 <code>key</code> 的情况</strong>：</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <p>变更为：</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>Three<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <p>React 会重新创建所有节点。</p>
 <p><strong>有 <code>key</code> 的情况</strong>：</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;1&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;2&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <p>变更为：</p>
 <figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;ul&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;2&quot;</span>&gt;</span>Two<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&quot;1&quot;</span>&gt;</span>One<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line">&lt;/ul&gt;</span><br></pre></td></tr></table></figure>
+
 <p>React 会通过 <code>key</code> 检测顺序变化，只更新位置。</p>
 <hr>
 <h2 id="4-Diff-算法的复杂度"><a href="#4-Diff-算法的复杂度" class="headerlink" title="4. Diff 算法的复杂度"></a><strong>4. Diff 算法的复杂度</strong></h2><p>React 的 Diff 算法通过以下方式优化复杂度：</p>
@@ -143,23 +155,92 @@
 <hr>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><p>React 的 Diff 算法基于简化规则和分层比较策略，实现了高效的虚拟 DOM 更新。通过使用 <code>key</code> 优化列表比较和组件类型判断，React 能够在绝大多数场景中保持出色的性能。但在特定场景下，开发者仍需通过优化 <code>key</code> 和组件设计来提高性能。</p>
 ]]></content>
+      <tags>
+        <tag>React</tag>
+        <tag>Diff</tag>
+      </tags>
   </entry>
   <entry>
-    <title>Hello World</title>
-    <url>/2024/11/18/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+    <title>TypeScript 泛型</title>
+    <url>/2024/11/22/TypeScript-%E6%B3%9B%E5%9E%8B/</url>
+    <content><![CDATA[<p>在 TypeScript 中，**<code>interface</code>（接口）** 是一种用于定义对象结构的方式。它允许你定义对象的属性、方法、函数签名、类行为等的形状。接口提供了一个强类型的检查机制，帮助开发者在编写代码时保证对象的结构符合预期，并减少潜在的错误。</p>
+<p>接口是 TypeScript 类型系统的核心之一，它的作用是描述对象的结构（包括属性和方法）和类的行为。接口可以通过继承、合并、混合等方式，使得 TypeScript 代码更加灵活、可复用和安全。</p>
+<hr>
+<h3 id="1-基本概念：接口的定义和使用"><a href="#1-基本概念：接口的定义和使用" class="headerlink" title="1. 基本概念：接口的定义和使用"></a>1. <strong>基本概念：接口的定义和使用</strong></h3><h4 id="1-1-定义接口"><a href="#1-1-定义接口" class="headerlink" title="1.1 定义接口"></a>1.1 定义接口</h4><p>使用 <code>interface</code> 关键字可以定义接口。接口描述对象的形状，也就是说，它指定了对象中应该包含哪些属性以及它们的类型。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line">  <span class="attr">age</span>: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>在上面的例子中，<code>Person</code> 是一个接口，包含两个属性：<code>name</code>（类型是 <code>string</code>）和 <code>age</code>（类型是 <code>number</code>）。</p>
+<h4 id="1-2-使用接口"><a href="#1-2-使用接口" class="headerlink" title="1.2 使用接口"></a>1.2 使用接口</h4><p>定义了接口后，我们可以使用该接口来声明对象，确保对象符合接口定义的结构。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="attr">person</span>: <span class="title class_">Person</span> = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&#x27;Alice&#x27;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">30</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>如果对象的结构不符合接口定义，TypeScript 会报错。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="attr">invalidPerson</span>: <span class="title class_">Person</span> = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&#x27;Bob&#x27;</span></span><br><span class="line">  <span class="comment">// Error: Property &#x27;age&#x27; is missing in type &#x27;&#123; name: string; &#125;&#x27; but required in type &#x27;Person&#x27;.</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="2-接口的可选属性"><a href="#2-接口的可选属性" class="headerlink" title="2. 接口的可选属性"></a>2. <strong>接口的可选属性</strong></h3><p>接口中的属性可以通过在属性名后加上 <code>?</code> 来标记为可选属性。这意味着该属性可以存在，也可以缺失。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line">  age?: <span class="built_in">number</span>;  <span class="comment">// age 是可选的</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">person1</span>: <span class="title class_">Person</span> = &#123; <span class="attr">name</span>: <span class="string">&#x27;Alice&#x27;</span> &#125;;   <span class="comment">// 合法</span></span><br><span class="line"><span class="keyword">const</span> <span class="attr">person2</span>: <span class="title class_">Person</span> = &#123; <span class="attr">name</span>: <span class="string">&#x27;Bob&#x27;</span>, <span class="attr">age</span>: <span class="number">25</span> &#125;;  <span class="comment">// 合法</span></span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<p>在这个例子中，<code>age</code> 属性是可选的，<code>person1</code> 可以没有 <code>age</code> 属性，而 <code>person2</code> 可以有。</p>
+<hr>
+<h3 id="3-接口的只读属性"><a href="#3-接口的只读属性" class="headerlink" title="3. 接口的只读属性"></a>3. <strong>接口的只读属性</strong></h3><p>通过在接口的属性前加上 <code>readonly</code>，可以指定该属性是只读的，意味着一旦赋值后，不能再修改该属性的值。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="keyword">readonly</span> <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line">  <span class="attr">age</span>: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">person</span>: <span class="title class_">Person</span> = &#123; <span class="attr">name</span>: <span class="string">&#x27;Alice&#x27;</span>, <span class="attr">age</span>: <span class="number">30</span> &#125;;</span><br><span class="line"></span><br><span class="line">person.<span class="property">name</span> = <span class="string">&#x27;Bob&#x27;</span>;  <span class="comment">// Error: Cannot assign to &#x27;name&#x27; because it is a read-only property.</span></span><br><span class="line">person.<span class="property">age</span> = <span class="number">35</span>;      <span class="comment">// This is allowed</span></span><br></pre></td></tr></table></figure>
+
+<p>在上面的例子中，<code>name</code> 是只读属性，不能再修改其值。</p>
+<hr>
+<h3 id="4-接口的方法"><a href="#4-接口的方法" class="headerlink" title="4. 接口的方法"></a>4. <strong>接口的方法</strong></h3><p>接口不仅可以定义对象的属性，还可以定义方法。接口中的方法也可以有参数类型和返回值类型。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line">  <span class="title function_">greet</span>(<span class="attr">message</span>: <span class="built_in">string</span>): <span class="built_in">void</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">person</span>: <span class="title class_">Person</span> = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&#x27;Alice&#x27;</span>,</span><br><span class="line">  <span class="title function_">greet</span>(<span class="params">message: <span class="built_in">string</span></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`<span class="subst">$&#123;<span class="variable language_">this</span>.name&#125;</span> says: <span class="subst">$&#123;message&#125;</span>`</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">person.<span class="title function_">greet</span>(<span class="string">&#x27;Hello!&#x27;</span>);  <span class="comment">// Alice says: Hello!</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，接口 <code>Person</code> 定义了一个 <code>greet</code> 方法，方法接受一个 <code>string</code> 类型的 <code>message</code> 参数，并返回 <code>void</code>。</p>
+<hr>
+<h3 id="5-接口的继承"><a href="#5-接口的继承" class="headerlink" title="5. 接口的继承"></a>5. <strong>接口的继承</strong></h3><p>接口支持继承，允许一个接口继承其他接口。这种方式可以扩展现有的接口，增加更多的属性和方法。</p>
+<h4 id="5-1-单一继承"><a href="#5-1-单一继承" class="headerlink" title="5.1 单一继承"></a>5.1 单一继承</h4><figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Animal</span> &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">Dog</span> <span class="keyword">extends</span> <span class="title class_">Animal</span> &#123;</span><br><span class="line">  <span class="attr">breed</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">dog</span>: <span class="title class_">Dog</span> = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&#x27;Buddy&#x27;</span>,</span><br><span class="line">  <span class="attr">breed</span>: <span class="string">&#x27;Golden Retriever&#x27;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Dog</code> 接口继承了 <code>Animal</code> 接口，<code>Dog</code> 除了 <code>name</code> 属性外，还添加了 <code>breed</code> 属性。</p>
+<h4 id="5-2-多重继承"><a href="#5-2-多重继承" class="headerlink" title="5.2 多重继承"></a>5.2 多重继承</h4><p>TypeScript 允许接口继承多个接口（多重继承）。这样，你可以创建一个组合多个接口的接口。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Animal</span> &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">Vehicle</span> &#123;</span><br><span class="line">  <span class="attr">wheels</span>: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">Car</span> <span class="keyword">extends</span> <span class="title class_">Animal</span>, <span class="title class_">Vehicle</span> &#123;</span><br><span class="line">  <span class="attr">brand</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">car</span>: <span class="title class_">Car</span> = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&#x27;Tesla&#x27;</span>,</span><br><span class="line">  <span class="attr">wheels</span>: <span class="number">4</span>,</span><br><span class="line">  <span class="attr">brand</span>: <span class="string">&#x27;Model S&#x27;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Car</code> 接口继承了 <code>Animal</code> 和 <code>Vehicle</code> 两个接口，合并了它们的属性。</p>
+<hr>
+<h3 id="6-接口的类实现"><a href="#6-接口的类实现" class="headerlink" title="6. 接口的类实现"></a>6. <strong>接口的类实现</strong></h3><p>接口可以用于约束类的结构。类通过 <code>implements</code> 关键字来实现接口，类必须包含接口中定义的所有属性和方法。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Greetable</span> &#123;</span><br><span class="line">  <span class="title function_">greet</span>(): <span class="built_in">void</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> <span class="keyword">implements</span> <span class="title class_">Greetable</span> &#123;</span><br><span class="line">  <span class="title function_">constructor</span>(<span class="params"><span class="keyword">public</span> name: <span class="built_in">string</span></span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">greet</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`Hello, <span class="subst">$&#123;<span class="variable language_">this</span>.name&#125;</span>`</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> person = <span class="keyword">new</span> <span class="title class_">Person</span>(<span class="string">&#x27;Alice&#x27;</span>);</span><br><span class="line">person.<span class="title function_">greet</span>();  <span class="comment">// Hello, Alice</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Person</code> 类实现了 <code>Greetable</code> 接口，必须实现 <code>greet</code> 方法。</p>
+<h4 id="6-1-类实现多个接口"><a href="#6-1-类实现多个接口" class="headerlink" title="6.1 类实现多个接口"></a>6.1 类实现多个接口</h4><p>类也可以实现多个接口。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Animal</span> &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">Flyable</span> &#123;</span><br><span class="line">  <span class="title function_">fly</span>(): <span class="built_in">void</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Bird</span> <span class="keyword">implements</span> <span class="title class_">Animal</span>, <span class="title class_">Flyable</span> &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span>;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">constructor</span>(<span class="params">name: <span class="built_in">string</span></span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">fly</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`<span class="subst">$&#123;<span class="variable language_">this</span>.name&#125;</span> is flying`</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> bird = <span class="keyword">new</span> <span class="title class_">Bird</span>(<span class="string">&#x27;Eagle&#x27;</span>);</span><br><span class="line">bird.<span class="title function_">fly</span>();  <span class="comment">// Eagle is flying</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Bird</code> 类实现了 <code>Animal</code> 和 <code>Flyable</code> 两个接口。</p>
+<hr>
+<h3 id="7-接口的函数类型"><a href="#7-接口的函数类型" class="headerlink" title="7. 接口的函数类型"></a>7. <strong>接口的函数类型</strong></h3><p>接口不仅可以描述对象的结构，还可以描述函数的签名。接口可以指定一个函数的参数类型和返回值类型。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Add</span> &#123;</span><br><span class="line">  (<span class="attr">a</span>: <span class="built_in">number</span>, <span class="attr">b</span>: <span class="built_in">number</span>): <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">add</span>: <span class="title class_">Add</span> = <span class="function">(<span class="params">x, y</span>) =&gt;</span> x + y;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">2</span>, <span class="number">3</span>));  <span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Add</code> 接口描述了一个接受两个 <code>number</code> 类型的参数并返回一个 <code>number</code> 类型的函数签名。</p>
+<hr>
+<h3 id="8-索引签名"><a href="#8-索引签名" class="headerlink" title="8. 索引签名"></a>8. <strong>索引签名</strong></h3><p>索引签名允许你为接口添加任意数量的属性，而不需要事先定义每个属性。这对处理具有动态属性的对象非常有用。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Dictionary</span> &#123;</span><br><span class="line">  [<span class="attr">key</span>: <span class="built_in">string</span>]: <span class="built_in">string</span>;  <span class="comment">// 允许字符串类型的键和对应的字符串值</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">dict</span>: <span class="title class_">Dictionary</span> = &#123;</span><br><span class="line">  <span class="attr">hello</span>: <span class="string">&#x27;world&#x27;</span>,</span><br><span class="line">  <span class="attr">foo</span>: <span class="string">&#x27;bar&#x27;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Dictionary</code> 接口允许对象拥有任意数量的 <code>string</code> 类型的键，并且值也必须是 <code>string</code> 类型。</p>
+<hr>
+<h3 id="9-混合类型的接口"><a href="#9-混合类型的接口" class="headerlink" title="9. 混合类型的接口"></a>9. <strong>混合类型的接口</strong></h3><p>有时候，你可能需要描述同时具有多个不同类型的对象，比如一个对象既有属性又有方法。可以通过接口来描述这种<strong>混合类型</strong>。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Counter</span> &#123;</span><br><span class="line">  (<span class="attr">start</span>: <span class="built_in">number</span>): <span class="built_in">string</span>;</span><br><span class="line">  <span class="attr">count</span>: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">counter</span>: <span class="title class_">Counter</span> = <span class="function">(<span class="params">start: <span class="built_in">number</span></span>) =&gt;</span> &#123;</span><br><span class="line">  counter.<span class="property">count</span> = start;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">`Counter started at <span class="subst">$&#123;start&#125;</span>`</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">counter.<span class="property">count</span> = <span class="number">0</span>;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">counter</span>(<span class="number">5</span>));  <span class="comment">// Counter started at 5</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(counter.<span class="property">count</span>);  <span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Counter</code> 接口同时描述了一个函数类型和一个属性 <code>count</code>。</p>
+<hr>
+<h3 id="10-接口的声明合并"><a href="#10-接口的声明合并" class="headerlink" title="10. 接口的声明合并"></a>10. <strong>接口的声明合并</strong></h3><p>接口有一个有趣的特性，就是 <strong>声明合并</strong>。当多个接口声明同名时，TypeScript 会自动将它们合并成一个接口。这对于扩展已有接口非常有用。</p>
+<figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Window</span> &#123;</span><br><span class="line">  <span class="attr">title</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">Window</span> &#123;</span><br><span class="line">  <span class="attr">width</span>: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">myWindow</span>: <span class="title class_">Window</span> = &#123;</span><br><span class="line">  <span class="attr">title</span>: <span class="string">&#x27;Main Window&#x27;</span>,</span><br><span class="line">  <span class="attr">width</span>: <span class="number">800</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，<code>Window</code> 接口被声明了两次，TypeScript 会自动将两个声明合并为一个接口。因此 <code>Window</code> 既有 <code>title</code> 属性，也有 <code>width</code> 属性。</p>
+<hr>
+<h3 id="11-总结"><a href="#11-总结" class="headerlink" title="11. 总结"></a>11. <strong>总结</strong></h3><ul>
+<li><strong>接口</strong> 是 TypeScript 中用于描述对象、类、函数等类型的结构的一种方式。</li>
+<li>接口可以定义<strong>属性</strong>、<strong>方法</strong>、<strong>可选属性</strong>、<strong>只读属性</strong>等。</li>
+<li>接口支持<strong>继承</strong>，可以通过 <code>extends</code> 关键字继承多个接口，也可以被类实现。</li>
+<li><strong>函数类型</strong>和<strong>混合类型</strong>可以通过接口来描述。</li>
+<li>接口还支持<strong>声明合并</strong>，多个相同名字的接口会自动合并成一个接口。</li>
+</ul>
 ]]></content>
+      <tags>
+        <tag>Typescript</tag>
+        <tag>interface</tag>
+      </tags>
   </entry>
 </search>
