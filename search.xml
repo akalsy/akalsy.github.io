@@ -161,9 +161,9 @@
       </tags>
   </entry>
   <entry>
-    <title>TypeScript 泛型</title>
-    <url>/2024/11/22/TypeScript-%E6%B3%9B%E5%9E%8B/</url>
-    <content><![CDATA[<p>在 TypeScript 中，**<code>interface</code>（接口）** 是一种用于定义对象结构的方式。它允许你定义对象的属性、方法、函数签名、类行为等的形状。接口提供了一个强类型的检查机制，帮助开发者在编写代码时保证对象的结构符合预期，并减少潜在的错误。</p>
+    <title>TypeScript 接口</title>
+    <url>/2024/11/22/TypeScript-%E6%8E%A5%E5%8F%A3/</url>
+    <content><![CDATA[<p>在 TypeScript 中 <code>interface</code>（接口） 是一种用于定义对象结构的方式。它允许你定义对象的属性、方法、函数签名、类行为等的形状。接口提供了一个强类型的检查机制，帮助开发者在编写代码时保证对象的结构符合预期，并减少潜在的错误。</p>
 <p>接口是 TypeScript 类型系统的核心之一，它的作用是描述对象的结构（包括属性和方法）和类的行为。接口可以通过继承、合并、混合等方式，使得 TypeScript 代码更加灵活、可复用和安全。</p>
 <hr>
 <h3 id="1-基本概念：接口的定义和使用"><a href="#1-基本概念：接口的定义和使用" class="headerlink" title="1. 基本概念：接口的定义和使用"></a>1. <strong>基本概念：接口的定义和使用</strong></h3><h4 id="1-1-定义接口"><a href="#1-1-定义接口" class="headerlink" title="1.1 定义接口"></a>1.1 定义接口</h4><p>使用 <code>interface</code> 关键字可以定义接口。接口描述对象的形状，也就是说，它指定了对象中应该包含哪些属性以及它们的类型。</p>
