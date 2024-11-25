@@ -1,311 +1,244 @@
 ---
 title: TypeScript 泛型
-date: 2024-11-22 15:39:16
-tags: 
-  - Typescript
-  - interface
+date: 2024-11-23 21:09:50
+tags:
+  - TypeScript
+  - 泛型
+---
+在 TypeScript 中，**泛型**（Generics）是一种强大的工具，用于定义能够处理多种类型的函数、类和接口，而不失去类型安全性。它允许我们编写可复用的代码，避免类型重复，并且提高了代码的灵活性和可维护性。
+
+泛型的核心思想是**抽象类型**，使得我们可以在编写代码时指定一个**类型占位符**，在使用时再指定具体的类型。
+
+### 1. **基础概念：泛型的作用**
+
+通过泛型，我们可以在定义函数、类或接口时，让它们适应多种数据类型，而不需要在每次使用时都重复写出类型。
+
+例如，我们希望定义一个能够处理不同类型的函数，而不管数据类型是 `number`、`string` 还是其他类型，使用泛型可以让这个函数更具通用性。
+
+#### 1.1 泛型函数
+
+我们首先来看一个普通的函数，它的类型已经固定了：
+
+```typescript
+function identity(value: number): number {
+  return value;
+}
+
+let num = identity(5);  // 合法
+let str = identity("hello");  // Error: Argument of type 'string' is not assignable to parameter of type 'number'.
+```
+
+上面的函数只能接受 `number` 类型的值，并且返回 `number` 类型。这个函数无法用于处理其他类型的数据，若要复用此函数，我们需要为不同的类型编写多个版本，代码冗长且不易维护。
+
+通过使用泛型，可以实现类型的灵活性：
+
+```typescript
+function identity<T>(value: T): T {
+  return value;
+}
+
+let num = identity(5);       // 合法，类型推导为 number
+let str = identity("hello"); // 合法，类型推导为 string
+```
+
+在这个例子中，`T` 是一个泛型参数，它代表了一个占位符，表示函数可以接受和返回任意类型。你可以在函数调用时自动推导出类型，也可以显式指定类型：
+
+```typescript
+let num = identity<number>(5); // 显式指定 T 为 number
+let str = identity<string>("hello"); // 显式指定 T 为 string
+```
+
+#### 1.2 泛型类型约束
+
+有时，你可能希望限制泛型类型的范围，比如要求泛型参数必须是某个特定类型的子类型。在这种情况下，可以使用 **类型约束** 来约束泛型类型。
+
+例如，假设我们希望传入的 `value` 必须是 `length` 属性存在的对象（如 `string` 或 `array`），我们可以这样做：
+
+```typescript
+function logLength<T extends { length: number }>(value: T): number {
+  return value.length;
+}
+
+console.log(logLength("Hello"));    // 5
+console.log(logLength([1, 2, 3]));  // 3
+console.log(logLength(5));          // Error: Argument of type '5' is not assignable to parameter of type '{ length: number; }'.
+```
+
+在这个例子中，`T extends { length: number }` 表示泛型 `T` 必须是一个拥有 `length` 属性的类型，`string`、`array` 等类型符合这一约束，但 `number` 类型不符合。
+
 ---
 
-在 TypeScript 中，**`interface`（接口）** 是一种用于定义对象结构的方式。它允许你定义对象的属性、方法、函数签名、类行为等的形状。接口提供了一个强类型的检查机制，帮助开发者在编写代码时保证对象的结构符合预期，并减少潜在的错误。
+### 2. **泛型接口**
 
-接口是 TypeScript 类型系统的核心之一，它的作用是描述对象的结构（包括属性和方法）和类的行为。接口可以通过继承、合并、混合等方式，使得 TypeScript 代码更加灵活、可复用和安全。
+除了泛型函数外，TypeScript 还允许我们在接口中使用泛型来描述类型。
 
----
+#### 2.1 泛型接口的基本用法
 
-### 1. **基本概念：接口的定义和使用**
+例如，我们可以定义一个泛型接口，它指定了一个方法，该方法的返回类型和输入类型都是泛型类型：
 
-#### 1.1 定义接口
+```typescript
+interface IdentityFn<T> {
+  (value: T): T;
+}
 
-使用 `interface` 关键字可以定义接口。接口描述对象的形状，也就是说，它指定了对象中应该包含哪些属性以及它们的类型。
+const identity: IdentityFn<number> = (value) => value;
+console.log(identity(5));  // 5
+```
+
+在这个例子中，`IdentityFn` 接口定义了一个泛型函数类型，它接受一个 `T` 类型的参数并返回 `T` 类型的值。我们为 `IdentityFn` 接口指定了具体类型 `number`。
+
+#### 2.2 泛型接口的约束
+
+你还可以为泛型接口指定约束。比如，假设我们希望泛型参数 `T` 必须是一个对象类型，且该对象必须有一个 `name` 属性，我们可以这样定义：
 
 ```typescript
 interface Person {
   name: string;
   age: number;
 }
+
+interface Info<T extends Person> {
+  value: T;
+}
+
+const personInfo: Info<Person> = { value: { name: "Alice", age: 30 } };
 ```
 
-在上面的例子中，`Person` 是一个接口，包含两个属性：`name`（类型是 `string`）和 `age`（类型是 `number`）。
-
-#### 1.2 使用接口
-
-定义了接口后，我们可以使用该接口来声明对象，确保对象符合接口定义的结构。
-
-```typescript
-const person: Person = {
-  name: 'Alice',
-  age: 30
-};
-```
-
-如果对象的结构不符合接口定义，TypeScript 会报错。
-
-```typescript
-const invalidPerson: Person = {
-  name: 'Bob'
-  // Error: Property 'age' is missing in type '{ name: string; }' but required in type 'Person'.
-};
-```
+在这个例子中，`Info` 接口的泛型参数 `T` 必须是 `Person` 类型的子类型，因此 `personInfo` 必须包含一个 `name` 和 `age` 属性。
 
 ---
 
-### 2. **接口的可选属性**
+### 3. **泛型类**
 
-接口中的属性可以通过在属性名后加上 `?` 来标记为可选属性。这意味着该属性可以存在，也可以缺失。
+类也可以使用泛型。泛型类的作用和泛型函数类似，可以使类能够处理多种类型。
 
-```typescript
-interface Person {
-  name: string;
-  age?: number;  // age 是可选的
-}
-
-const person1: Person = { name: 'Alice' };   // 合法
-const person2: Person = { name: 'Bob', age: 25 };  // 合法
-```
-
-在这个例子中，`age` 属性是可选的，`person1` 可以没有 `age` 属性，而 `person2` 可以有。
-
----
-
-### 3. **接口的只读属性**
-
-通过在接口的属性前加上 `readonly`，可以指定该属性是只读的，意味着一旦赋值后，不能再修改该属性的值。
+#### 3.1 泛型类的基本用法
 
 ```typescript
-interface Person {
-  readonly name: string;
-  age: number;
-}
+class Box<T> {
+  value: T;
 
-const person: Person = { name: 'Alice', age: 30 };
-
-person.name = 'Bob';  // Error: Cannot assign to 'name' because it is a read-only property.
-person.age = 35;      // This is allowed
-```
-
-在上面的例子中，`name` 是只读属性，不能再修改其值。
-
----
-
-### 4. **接口的方法**
-
-接口不仅可以定义对象的属性，还可以定义方法。接口中的方法也可以有参数类型和返回值类型。
-
-```typescript
-interface Person {
-  name: string;
-  greet(message: string): void;
-}
-
-const person: Person = {
-  name: 'Alice',
-  greet(message: string) {
-    console.log(`${this.name} says: ${message}`);
+  constructor(value: T) {
+    this.value = value;
   }
-};
 
-person.greet('Hello!');  // Alice says: Hello!
-```
-
-在这个例子中，接口 `Person` 定义了一个 `greet` 方法，方法接受一个 `string` 类型的 `message` 参数，并返回 `void`。
-
----
-
-### 5. **接口的继承**
-
-接口支持继承，允许一个接口继承其他接口。这种方式可以扩展现有的接口，增加更多的属性和方法。
-
-#### 5.1 单一继承
-
-```typescript
-interface Animal {
-  name: string;
-}
-
-interface Dog extends Animal {
-  breed: string;
-}
-
-const dog: Dog = {
-  name: 'Buddy',
-  breed: 'Golden Retriever'
-};
-```
-
-在这个例子中，`Dog` 接口继承了 `Animal` 接口，`Dog` 除了 `name` 属性外，还添加了 `breed` 属性。
-
-#### 5.2 多重继承
-
-TypeScript 允许接口继承多个接口（多重继承）。这样，你可以创建一个组合多个接口的接口。
-
-```typescript
-interface Animal {
-  name: string;
-}
-
-interface Vehicle {
-  wheels: number;
-}
-
-interface Car extends Animal, Vehicle {
-  brand: string;
-}
-
-const car: Car = {
-  name: 'Tesla',
-  wheels: 4,
-  brand: 'Model S'
-};
-```
-
-在这个例子中，`Car` 接口继承了 `Animal` 和 `Vehicle` 两个接口，合并了它们的属性。
-
----
-
-### 6. **接口的类实现**
-
-接口可以用于约束类的结构。类通过 `implements` 关键字来实现接口，类必须包含接口中定义的所有属性和方法。
-
-```typescript
-interface Greetable {
-  greet(): void;
-}
-
-class Person implements Greetable {
-  constructor(public name: string) {}
-
-  greet() {
-    console.log(`Hello, ${this.name}`);
+  getValue(): T {
+    return this.value;
   }
 }
 
-const person = new Person('Alice');
-person.greet();  // Hello, Alice
+const numberBox = new Box(123);    // 泛型 T 被推导为 number
+console.log(numberBox.getValue()); // 123
+
+const stringBox = new Box("Hello"); // 泛型 T 被推导为 string
+console.log(stringBox.getValue());  // "Hello"
 ```
 
-在这个例子中，`Person` 类实现了 `Greetable` 接口，必须实现 `greet` 方法。
+在这个例子中，`Box` 是一个泛型类，它可以包装任何类型的值。通过 `T`，我们可以在实例化时指定类型。
 
-#### 6.1 类实现多个接口
+#### 3.2 泛型类的构造函数
 
-类也可以实现多个接口。
+泛型类也可以有带泛型参数的构造函数：
 
 ```typescript
-interface Animal {
-  name: string;
-}
+class Pair<T, U> {
+  first: T;
+  second: U;
 
-interface Flyable {
-  fly(): void;
-}
-
-class Bird implements Animal, Flyable {
-  name: string;
-
-  constructor(name: string) {
-    this.name = name;
-  }
-
-  fly() {
-    console.log(`${this.name} is flying`);
+  constructor(first: T, second: U) {
+    this.first = first;
+    this.second = second;
   }
 }
 
-const bird = new Bird('Eagle');
-bird.fly();  // Eagle is flying
+const pair = new Pair(1, "one");
+console.log(pair.first);   // 1
+console.log(pair.second);  // "one"
 ```
 
-在这个例子中，`Bird` 类实现了 `Animal` 和 `Flyable` 两个接口。
+在这个例子中，`Pair` 是一个带有两个泛型参数 `T` 和 `U` 的类，分别代表两个不同类型的值。
 
 ---
 
-### 7. **接口的函数类型**
+### 4. **泛型约束与默认类型**
 
-接口不仅可以描述对象的结构，还可以描述函数的签名。接口可以指定一个函数的参数类型和返回值类型。
+#### 4.1 泛型约束
+
+泛型参数可以通过 `extends` 进行约束，确保传入的类型满足特定的条件：
 
 ```typescript
-interface Add {
-  (a: number, b: number): number;
+interface Lengthwise {
+  length: number;
 }
 
-const add: Add = (x, y) => x + y;
+function logLength<T extends Lengthwise>(value: T): number {
+  return value.length;
+}
 
-console.log(add(2, 3));  // 5
+logLength("Hello");    // 合法，"Hello" 有 length 属性
+logLength([1, 2, 3]);  // 合法，[1, 2, 3] 有 length 属性
+logLength(123);        // Error: Argument of type '123' is not assignable to parameter of type 'Lengthwise'.
 ```
 
-在这个例子中，`Add` 接口描述了一个接受两个 `number` 类型的参数并返回一个 `number` 类型的函数签名。
+这里，我们通过 `T extends Lengthwise` 限制了 `T` 必须是具有 `length` 属性的类型。
 
----
+#### 4.2 泛型默认类型
 
-### 8. **索引签名**
-
-索引签名允许你为接口添加任意数量的属性，而不需要事先定义每个属性。这对处理具有动态属性的对象非常有用。
+你还可以为泛型指定默认类型。如果调用时没有显式指定类型，TypeScript 将使用默认类型。
 
 ```typescript
-interface Dictionary {
-  [key: string]: string;  // 允许字符串类型的键和对应的字符串值
+function wrap<T = string>(value: T): T {
+  return value;
 }
 
-const dict: Dictionary = {
-  hello: 'world',
-  foo: 'bar'
-};
+let wrapped = wrap(123);  // T 被推导为 number
+let wrappedString = wrap(); // T 默认为 string
 ```
 
-在这个例子中，`Dictionary` 接口允许对象拥有任意数量的 `string` 类型的键，并且值也必须是 `string` 类型。
+在这个例子中，`wrap` 函数的泛型参数 `T` 默认是 `string`，但如果调用时显式指定了类型（如 `number`），则会使用指定的类型。
 
 ---
 
-### 9. **混合类型的接口**
+### 5. **泛型的高级应用**
 
-有时候，你可能需要描述同时具有多个不同类型的对象，比如一个对象既有属性又有方法。可以通过接口来描述这种**混合类型**。
+#### 5.1 使用多个泛型参数
+
+你可以在一个函数、类或接口中使用多个泛型参数。常见的例子包括映射类型、双重泛型等。
 
 ```typescript
-interface Counter {
-  (start: number): string;
-  count: number;
+class Pair<T, U> {
+  first: T;
+  second: U;
+
+  constructor(first: T, second: U) {
+    this.first = first;
+    this.second = second;
+  }
+
+  swap(): Pair<U, T> {
+    return new Pair(this.second, this.first);
+  }
 }
 
-const counter: Counter = (start: number) => {
-  counter.count = start;
-  return `Counter started at ${start}`;
-};
-
-counter.count = 0;
-console.log(counter(5));  // Counter started at 5
-console.log(counter.count);  // 5
+const pair = new Pair(1, "one");
+const swappedPair = pair.swap();
+console.log(swappedPair.first);  // "one"
+console.log(swappedPair.second); // 1
 ```
 
-在这个例子中，`Counter` 接口同时描述了一个函数类型和一个属性 `count`。
+在这个例子中，`Pair` 类接受两个泛型参数 `T` 和 `U`，并通过 `swap` 方法返回一个交换了类型的 `Pair` 对象。
 
----
+#### 5.2 泛型与函数重载
 
-### 10. **接口的声明合并**
-
-接口有一个有趣的特性，就是 **声明合并**。当多个接口声明同名时，TypeScript 会自动将它们合并成一个接口。这对于扩展已有接口非常有用。
+你还可以结合泛型和函数重载实现更加灵活的函数签名。
 
 ```typescript
-interface Window {
-  title: string;
+function merge<T, U>(obj1: T, obj2: U): T & U {
+  return { ...obj1, ...obj2 };
 }
 
-interface Window {
-  width: number;
-}
-
-const myWindow: Window = {
-  title: 'Main Window',
-  width: 800
-};
+const merged = merge({ name: "Alice" }, { age: 30 });
+console.log(merged); // { name: "Alice", age: 30 }
 ```
 
-在这个例子中，`Window` 接口被声明了两次，TypeScript 会自动将两个声明合并为一个接口。因此 `Window` 既有 `title` 属性，也有 `width` 属性。
-
----
-
-### 11. **总结**
-
-- **接口** 是 TypeScript 中用于描述对象、类、函数等类型的结构的一种方式。
-- 接口可以定义**属性**、**方法**、**可选属性**、**只读属性**等。
-- 接口支持**继承**，可以通过 `extends` 关键字继承多个接口，也可以被类实现。
-- **函数类型**和**混合类型**可以通过接口来描述。
-- 接口还支持**声明合并**，多个相同名字的接口会自动合并成一个接口。
+在这个例子中，`merge` 函数接受两个对象并返回它们的交集类型，
