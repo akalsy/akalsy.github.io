@@ -34,7 +34,7 @@ friends:
   # friendA: //www.baidu.com
   # friendB: //www.google.com
 about:
-  enable: true
+  enable: false
   image: /intro/about-bg.jpg
 # Search for website
 search:
